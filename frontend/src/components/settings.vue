@@ -385,6 +385,7 @@ function importConfig() {
 
 
 window.onerror = function (event, source, lineno, colno, error) {
+  if (typeof event === 'string' && event.includes('ResizeObserver')) return true;
   EventsEmit("frontendError", {
     page: "settings.vue",
     message: event,

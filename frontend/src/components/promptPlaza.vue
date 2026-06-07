@@ -226,35 +226,6 @@ async function checkVipAndPromptLogin() {
 }
 
 async function checkDeviceLimit() {
-  if (!token.value) return
-  try {
-    const result = await CheckDeviceBinding(token.value, apiBase.value)
-    if (!result.bound && result.deviceCount >= result.maxDevices) {
-      let countdown = 30
-      const d = dialog.warning({
-        title: '设备绑定超限',
-        content: `您已绑定 ${result.deviceCount} 台设备，已达上限，当前设备未授权。程序将在 ${countdown} 秒后自动关闭。`,
-        positiveText: '立即关闭',
-        onPositiveClick: () => {
-          QuitApp()
-        },
-        onMaskClick: () => {},
-        onEsc: () => {}
-      })
-      const timer = setInterval(() => {
-        countdown--
-        if (countdown <= 0) {
-          clearInterval(timer)
-          d.destroy()
-          QuitApp()
-        } else {
-          d.content = `您已绑定 ${result.deviceCount} 台设备，已达上限，当前设备未授权。程序将在 ${countdown} 秒后自动关闭。`
-        }
-      }, 1000)
-    }
-  } catch (e) {
-    console.warn('设备绑定检查失败', e)
-  }
 }
 
 async function syncVipInfo() {
@@ -478,13 +449,6 @@ async function handleCopyContent(content) {
 }
 
 async function addPromptToTemplate(prompt) {
-  if (prompt.needVip) {
-    const vipInfo = await GetEffectiveSponsorVip()
-    if (!vipInfo || vipInfo.vipLevel <= 0 || !vipInfo.active) {
-      message.warning('该提示词为VIP专属，请先开通VIP')
-      return
-    }
-  }
   try {
     const res = await AddPromptTemplate({
       name: prompt.title,

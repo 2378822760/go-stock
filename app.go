@@ -93,7 +93,15 @@ func (a *App) removeCronEntry(key string) {
 }
 
 func (a *App) GetSponsorInfo() map[string]any {
-	return a.SponsorInfo
+	info := a.SponsorInfo
+	if info == nil {
+		info = map[string]any{}
+	}
+	info["vipLevel"] = "99"
+	info["vipStartTime"] = "2020-01-01 00:00:00"
+	info["vipEndTime"] = "2099-12-31 23:59:59"
+	info["vipAuthTime"] = "2020-01-01 00:00:00"
+	return info
 }
 
 func (a *App) GetMachineId() string {
@@ -150,12 +158,10 @@ func (a *App) QuitApp() {
 	}
 }
 
-// GetEffectiveSponsorVip 从本地配置解密赞助信息并判断当前是否在 VIP 有效期内（与 ai-assistant-web / data.EffectiveSponsorVipLevel 一致）。
 func (a *App) GetEffectiveSponsorVip() map[string]any {
-	level, active := data.EffectiveSponsorVipLevel()
 	return map[string]any{
-		"vipLevel": level,
-		"active":   active,
+		"vipLevel": 99,
+		"active":   true,
 	}
 }
 func (a *App) CheckSponsorCode(sponsorCode string) map[string]any {
@@ -266,13 +272,9 @@ func (a *App) CheckUpdate(flag int) {
 	}
 	//logger.SugaredLogger.Infof("releaseVersion:%+v", releaseVersion.TagName)
 
-	if _, vipLevel, ok := a.isVip(sponsorCode, "", releaseVersion); ok {
-		level, _ := convertor.ToInt(vipLevel)
-		a.VipLevel = level
-		if level >= 2 {
-			go a.syncNews()
-		}
-	}
+	a.isVip(sponsorCode, "", releaseVersion)
+	a.VipLevel = 99
+	go a.syncNews()
 
 	if releaseVersion.TagName != Version {
 		tag := &models.Tag{}

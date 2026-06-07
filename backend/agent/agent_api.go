@@ -260,6 +260,10 @@ func runReact(ctx context.Context, stockAiAgent *StockAiAgent, messages []*schem
 						return
 					}
 				}
+			} else if strings.Contains(err.Error(), "no tool call") {
+				logger.SugaredLogger.Warnf("model returned no tool call, output already streamed via MessageFuture")
+				wg.Wait()
+				return
 			} else {
 				errMsg := fmt.Sprintf("❌ Agent 调用失败：%v", err)
 				if strings.Contains(err.Error(), "reasoning_content") || strings.Contains(err.Error(), "thinking is enabled") {
@@ -623,6 +627,10 @@ func runPlanExecute(ctx context.Context, stockAiAgent *StockAiAgent, messages []
 				continue
 			}
 
+			if strings.Contains(event.Err.Error(), "no tool call") {
+				logger.SugaredLogger.Warnf("model returned no tool call in PlanExecute, ignoring")
+				continue
+			}
 			errMsg := fmt.Sprintf("❌ Agent 调用失败：%v", event.Err)
 			if isTokenLimitError(event.Err) {
 				errMsg = "❌ Agent 调用失败（token 超限）：输入内容超过模型最大上下文长度限制。请尝试缩短对话历史或使用支持更长上下文的模型。"
